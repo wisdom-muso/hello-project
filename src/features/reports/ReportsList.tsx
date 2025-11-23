@@ -88,7 +88,7 @@ const availableReports: Report[] = [
   },
 ];
 
-const ReportsList = React.memo(function ReportsList() {
+function ReportsList() {
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
     dayjs().subtract(1, 'month'),
@@ -248,6 +248,6 @@ const ReportsList = React.memo(function ReportsList() {
       </Row>
     </div>
   );
-});
+}
 
-export default ReportsList;
+export default React.memo(ReportsList);

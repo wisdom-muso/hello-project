@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   Card,
   Select,
@@ -28,22 +28,22 @@ export default function MeasureDataPage() {
   const [saving, setSaving] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch measures
+  // Fetch measures once on mount
   useEffect(() => {
+    const fetchMeasures = async () => {
+      try {
+        const data = await hillfogClient.get<Measure[]>('/measures');
+        setMeasures(data);
+      } catch (error) {
+        handleApiError(error);
+      }
+    };
+
     fetchMeasures();
-  }, []);
+  }, []); // Only run once on mount
 
-  const fetchMeasures = async () => {
-    try {
-      const data = await hillfogClient.get<Measure[]>('/measures');
-      setMeasures(data);
-    } catch (error) {
-      handleApiError(error);
-    }
-  };
-
-  // Fetch HTML content for selected measure and date
-  const fetchMeasureData = async () => {
+  // Memoize fetchMeasureData function
+  const fetchMeasureData = useCallback(async () => {
     if (!selectedMeasure || !selectedDate) {
       message.warning('Please select both measure and date');
       return;
@@ -66,39 +66,40 @@ export default function MeasureDataPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedMeasure, selectedDate]);
 
-  // Intercept form submissions within rendered HTML
+  // Memoize form submission handler
+  const handleFormSubmit = useCallback(async (event: Event) => {
+    event.preventDefault();
+    const form = event.target as HTMLFormElement;
+
+    setSaving(true);
+    try {
+      const formData = new FormData(form);
+      const data: Record<string, any> = {};
+      formData.forEach((value, key) => {
+        data[key] = value;
+      });
+
+      // Add measure and date context
+      data.measureId = selectedMeasure;
+      data.date = selectedDate.format('YYYY-MM-DD');
+
+      await hillfogClient.post('/measures/data', data, { useFormData: true });
+      message.success('Data saved successfully');
+
+      // Refresh data
+      fetchMeasureData();
+    } catch (error) {
+      handleApiError(error);
+    } finally {
+      setSaving(false);
+    }
+  }, [selectedMeasure, selectedDate, fetchMeasureData]);
+
+  // Single effect to handle form submissions
   useEffect(() => {
-    if (!containerRef.current) return;
-
-    const handleFormSubmit = async (event: Event) => {
-      event.preventDefault();
-      const form = event.target as HTMLFormElement;
-
-      setSaving(true);
-      try {
-        const formData = new FormData(form);
-        const data: Record<string, any> = {};
-        formData.forEach((value, key) => {
-          data[key] = value;
-        });
-
-        // Add measure and date context
-        data.measureId = selectedMeasure;
-        data.date = selectedDate.format('YYYY-MM-DD');
-
-        await hillfogClient.post('/measures/data', data, { useFormData: true });
-        message.success('Data saved successfully');
-
-        // Refresh data
-        fetchMeasureData();
-      } catch (error) {
-        handleApiError(error);
-      } finally {
-        setSaving(false);
-      }
-    };
+    if (!containerRef.current || !htmlContent) return;
 
     // Attach event listeners to all forms in the container
     const forms = containerRef.current.querySelectorAll('form');
@@ -112,21 +113,25 @@ export default function MeasureDataPage() {
         form.removeEventListener('submit', handleFormSubmit);
       });
     };
-  }, [htmlContent, selectedMeasure, selectedDate]);
+  }, [htmlContent, handleFormSubmit]); // Only re-run when htmlContent or handler changes
 
-  // Handle measure change
-  const handleMeasureChange = (value: string) => {
+  // Memoize handlers
+  const handleMeasureChange = useCallback((value: string) => {
     setSelectedMeasure(value);
     setHtmlContent('');
-  };
+  }, []);
 
-  // Handle date change
-  const handleDateChange = (date: Dayjs | null) => {
+  const handleDateChange = useCallback((date: Dayjs | null) => {
     if (date) {
       setSelectedDate(date);
       setHtmlContent('');
     }
-  };
+  }, []);
+
+  // Memoize selected measure name
+  const selectedMeasureName = useMemo(() => {
+    return measures.find((m) => m.id === selectedMeasure)?.name || '';
+  }, [measures, selectedMeasure]);
 
   return (
     <div>
@@ -180,7 +185,7 @@ export default function MeasureDataPage() {
 
           {selectedMeasure && selectedDate && (
             <Alert
-              message={`Selected: ${measures.find((m) => m.id === selectedMeasure)?.name || ''} - ${selectedDate.format('YYYY-MM-DD')}`}
+              message={`Selected: ${selectedMeasureName} - ${selectedDate.format('YYYY-MM-DD')}`}
               type="info"
               showIcon
             />

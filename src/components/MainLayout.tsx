@@ -51,10 +51,13 @@ function MainLayout({ children }: MainLayoutProps) {
     return [{ title: 'Home', path: ROUTES.DASHBOARD }, ...crumbs];
   }, [pathname]);
 
-  // Update breadcrumbs only when they actually change
+  // Update breadcrumbs only when they actually change (deep equality check)
   useEffect(() => {
-    dispatch(setBreadcrumbs(computedBreadcrumbs));
-  }, [computedBreadcrumbs, dispatch]);
+    const isDifferent = JSON.stringify(computedBreadcrumbs) !== JSON.stringify(breadcrumbs);
+    if (isDifferent) {
+      dispatch(setBreadcrumbs(computedBreadcrumbs));
+    }
+  }, [computedBreadcrumbs]);
 
   // Memoize menu items to prevent recreation on every render
   const menuItems: MenuProps['items'] = useMemo(() => [
@@ -245,4 +248,4 @@ function MainLayout({ children }: MainLayoutProps) {
   );
 }
 
-export default MainLayout;
+export default React.memo(MainLayout);
