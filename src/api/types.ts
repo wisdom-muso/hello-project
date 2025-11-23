@@ -16,7 +16,7 @@ export interface PageOf<T> {
 
 // Scorecard related types
 export interface HfScorecard {
-  oid: string;
+  id: string; // Standardized UUID field
   name: string;
   content: string;
   mission: string;
@@ -40,7 +40,7 @@ export interface IStrategyObjective {
   name: string;
   description?: string;
   weight?: number;
-  kpis: string[]; // Array of KPI OIDs
+  kpis: string[]; // Array of KPI IDs
 }
 
 export interface IScorecardForm {
@@ -55,8 +55,7 @@ export interface IScorecardForm {
 
 // KPI related types
 export interface HfKpi {
-  oid: string;
-  id: string;
+  id: string; // Primary UUID identifier
   name: string;
   description?: string;
   frequencyOid?: string;
@@ -71,8 +70,7 @@ export interface HfKpi {
 }
 
 export interface HfKpiQueryResult {
-  oid: string;
-  id: string;
+  id: string; // Standardized UUID field
   name: string;
   description?: string;
   frequency?: string;
@@ -86,7 +84,7 @@ export interface MeasureDataInputBody {
 }
 
 export interface MeasureDataUpdateRequest {
-  kpiOid: string;
+  kpiId: string; // Standardized to 'id'
   date: string;
   frequency: string;
   [key: string]: any; // Dynamic fields like target_YYYYMMDD, actual_YYYYMMDD
@@ -94,8 +92,8 @@ export interface MeasureDataUpdateRequest {
 
 // Scorecard Color Settings
 export interface ScorecardColorSettings {
-  oid: string;
-  scorecardOid: string;
+  id: string; // Standardized UUID field
+  scorecardId: string; // Standardized reference
   minColor?: string;
   midColor?: string;
   maxColor?: string;
@@ -106,7 +104,7 @@ export interface ScorecardColorSettings {
 
 // User/Auth types
 export interface User {
-  oid: string;
+  id: string; // Standardized UUID field
   username: string;
   name: string;
   email?: string;

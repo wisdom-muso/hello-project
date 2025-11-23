@@ -4,12 +4,12 @@ import { MeasureDataInputBody } from '../types';
 class MeasureService {
   // Get server-rendered HTML form for measure data input
   async getInputBody(
-    kpiOid: string,
+    kpiId: string,
     date: string,
     frequency: string
   ): Promise<MeasureDataInputBody> {
     const queryParams = new URLSearchParams();
-    queryParams.append('kpiOid', kpiOid);
+    queryParams.append('kpiId', kpiId);
     queryParams.append('date', date);
     queryParams.append('frequency', frequency);
 

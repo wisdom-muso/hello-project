@@ -1,6 +1,6 @@
 // Scorecard Types
 export interface Objective {
-  oid: string;
+  id: string; // Standardized UUID field
   name: string;
   description?: string;
   targetValue?: number;
@@ -9,14 +9,14 @@ export interface Objective {
 }
 
 export interface Perspective {
-  oid: string;
+  id: string; // Standardized UUID field
   name: string;
   description?: string;
   objectives: Objective[];
 }
 
 export interface Scorecard {
-  oid: string;
+  id: string; // Standardized UUID field
   name: string;
   description?: string;
   createdAt: string;
@@ -26,19 +26,19 @@ export interface Scorecard {
 
 // Measure Types
 export interface Measure {
-  oid: string;
+  id: string; // Standardized UUID field
   name: string;
   description?: string;
   unit?: string;
   frequency?: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
   targetValue?: number;
   currentValue?: number;
-  objectiveOid?: string;
+  objectiveId?: string; // Reference field also standardized
 }
 
 export interface MeasureData {
-  oid: string;
-  measureOid: string;
+  id: string; // Standardized UUID field
+  measureId: string; // Reference field also standardized
   value: number;
   date: string;
   notes?: string;
@@ -46,7 +46,7 @@ export interface MeasureData {
 
 // User Types
 export interface User {
-  oid: string;
+  id: string; // Standardized UUID field
   name: string;
   email: string;
   role: 'admin' | 'manager' | 'user';
