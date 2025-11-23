@@ -1,14 +1,14 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import { HillfogApiResponse, HillfogApiError } from './types';
 
-// Create custom axios instance with base configuration for Struts 2 backend
+// Create custom axios instance with base configuration for Spring Boot backend
 const axiosInstance: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8088',
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080',
   timeout: 30000,
   headers: {
-    'Content-Type': 'application/x-www-form-urlencoded',
+    'Content-Type': 'application/json',
   },
-  withCredentials: true, // CRITICAL: Required for session-based auth with JSESSIONID cookies
+  withCredentials: true, // CRITICAL: Required for session-based auth (Spring Security session cookies)
 });
 
 // Request interceptor
