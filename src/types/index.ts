@@ -86,3 +86,54 @@ export interface Organization {
   description: string;
   // Add other fields as per OrganizationController.java model
 }
+
+// OKR Types
+export interface KeyResult {
+  oid: string;
+  name: string;
+  targetValue: number;
+  currentValue: number;
+  unit: string;
+  weight: number;
+  // Add other fields as per OkrBaseController.java model
+}
+
+export interface Objective {
+  oid: string;
+  name: string;
+  description: string;
+  keyResults: KeyResult[];
+  // Add other fields as per OkrBaseController.java model
+}
+
+export interface OkrBase {
+  oid: string;
+  title: string;
+  period: string; // e.g., "Q1 2025"
+  objectives: Objective[];
+}
+
+// PDCA Types
+export interface PdcaCycle {
+  oid: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  status: 'PLAN' | 'DO' | 'CHECK' | 'ACT';
+  // Add other fields as per PdcaController.java model
+}
+
+// System Setup Types
+export interface Formula {
+  oid: string;
+  name: string;
+  expression: string; // The calculation logic
+  description: string;
+}
+
+export interface AggregationMethod {
+  oid: string;
+  name: string;
+  methodType: 'SUM' | 'AVERAGE' | 'CUSTOM';
+  // Add other fields as per AggregationMethodController.java model
+}

@@ -14,6 +14,9 @@ import {
   SettingOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  RocketOutlined, // For OKR
+  SyncOutlined, // For PDCA
+  ToolOutlined, // For System Setup
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { useRouter, usePathname } from 'next/navigation';
@@ -93,12 +96,25 @@ function MainLayout({ children }: MainLayoutProps) {
       onClick: () => router.push(ROUTES.REPORTS),
     },
     {
+      key: '/okrs',
+      icon: <RocketOutlined />,
+      label: 'OKR Management',
+      onClick: () => router.push('/okrs'),
+    },
+    {
+      key: '/pdca',
+      icon: <SyncOutlined />,
+      label: 'PDCA Cycles',
+      onClick: () => router.push('/pdca'),
+    },
+    {
       key: 'admin',
       icon: <SettingOutlined />,
       label: 'Administration',
       children: [
         { key: '/employees', label: 'Employee Management', icon: <UserOutlined />, onClick: () => router.push('/employees') },
         { key: '/organizations', label: 'Organization Structure', icon: <TeamOutlined />, onClick: () => router.push('/organizations') },
+        { key: '/system-setup', label: 'System Setup', icon: <ToolOutlined />, onClick: () => router.push('/system-setup') },
       ],
     },
     {
@@ -143,8 +159,11 @@ function MainLayout({ children }: MainLayoutProps) {
     if (pathname.startsWith(ROUTES.KPIS)) return [ROUTES.KPIS];
     if (pathname.startsWith(ROUTES.MEASURE_DATA)) return [ROUTES.MEASURE_DATA];
     if (pathname.startsWith(ROUTES.REPORTS)) return [ROUTES.REPORTS];
+    if (pathname.startsWith('/okrs')) return ['/okrs'];
+    if (pathname.startsWith('/pdca')) return ['/pdca'];
     if (pathname.startsWith('/employees')) return ['admin'];
     if (pathname.startsWith('/organizations')) return ['admin'];
+    if (pathname.startsWith('/system-setup')) return ['admin'];
     if (pathname.startsWith(ROUTES.SETTINGS)) return [ROUTES.SETTINGS];
     return [ROUTES.DASHBOARD];
   }, [pathname]);
