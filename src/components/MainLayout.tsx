@@ -17,6 +17,7 @@ import {
   RocketOutlined, // For OKR
   SyncOutlined, // For PDCA
   ToolOutlined, // For System Setup
+  CodeOutlined, // For Query Tool
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { useRouter, usePathname } from 'next/navigation';
@@ -96,6 +97,12 @@ function MainLayout({ children }: MainLayoutProps) {
       onClick: () => router.push(ROUTES.REPORTS),
     },
     {
+      key: '/query-tool',
+      icon: <CodeOutlined />,
+      label: 'Common Query Tool',
+      onClick: () => router.push('/query-tool'),
+    },
+    {
       key: '/okrs',
       icon: <RocketOutlined />,
       label: 'OKR Management',
@@ -161,6 +168,7 @@ function MainLayout({ children }: MainLayoutProps) {
     if (pathname.startsWith(ROUTES.REPORTS)) return [ROUTES.REPORTS];
     if (pathname.startsWith('/okrs')) return ['/okrs'];
     if (pathname.startsWith('/pdca')) return ['/pdca'];
+    if (pathname.startsWith('/query-tool')) return ['/query-tool'];
     if (pathname.startsWith('/employees')) return ['admin'];
     if (pathname.startsWith('/organizations')) return ['admin'];
     if (pathname.startsWith('/system-setup')) return ['admin'];

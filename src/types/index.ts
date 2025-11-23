@@ -137,3 +137,19 @@ export interface AggregationMethod {
   methodType: 'SUM' | 'AVERAGE' | 'CUSTOM';
   // Add other fields as per AggregationMethodController.java model
 }
+
+// Reporting Types
+export interface ReportData {
+  reportId: string;
+  title: string;
+  parameters: any;
+  data: any; // Flexible structure for chart/table data
+}
+
+// Query Tool Types
+export interface CommonQuery {
+  oid: string;
+  name: string;
+  sqlStatement: string; // The SQL or query language statement
+  isPublic: boolean;
+}
