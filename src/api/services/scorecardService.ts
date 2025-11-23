@@ -24,18 +24,30 @@ export const scorecardService = {
 
   // Create new scorecard
   create: async (data: IScorecardForm): Promise<HfScorecard> => {
-    return hillfogClient.post<HfScorecard>('/scorecard/save.action', data, {
-      ognlPrefix: 'scorecard'
+    const { perspectives, ...scorecardData } = data;
+    const payload = {
+      ...scorecardData,
+      perspectives: JSON.stringify({ items: perspectives }), // Backend expects { items: [...] } structure
+    };
+    
+    return hillfogClient.post<HfScorecard>('/scorecard/save.action', payload, {
+      ognlPrefix: 'scorecard',
+      useFormData: true, // Send as form data to allow backend to read 'perspectives' as a parameter
     });
   },
 
   // Update scorecard
   update: async (oid: string, data: IScorecardForm): Promise<HfScorecard> => {
-    return hillfogClient.post<HfScorecard>('/scorecard/update.action', {
+    const { perspectives, ...scorecardData } = data;
+    const payload = {
       oid,
-      ...data
-    }, {
-      ognlPrefix: 'scorecard'
+      ...scorecardData,
+      perspectives: JSON.stringify({ items: perspectives }), // Backend expects { items: [...] } structure
+    };
+
+    return hillfogClient.post<HfScorecard>('/scorecard/update.action', payload, {
+      ognlPrefix: 'scorecard',
+      useFormData: true, // Send as form data to allow backend to read 'perspectives' as a parameter
     });
   },
 

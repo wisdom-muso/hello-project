@@ -9,13 +9,27 @@ class HillfogClient {
     return response.data;
   }
 
-  // POST request with JSON payload
+  // POST request with JSON payload or Form Data
   async post<T = any>(
     url: string,
     data?: any,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig & { useFormData?: boolean }
   ): Promise<T> {
-    const response: AxiosResponse<T> = await axiosInstance.post(url, data, config);
+    let payload = data;
+    let headers = config?.headers;
+
+    if (config?.useFormData) {
+      // Convert object to application/x-www-form-urlencoded string
+      payload = Object.keys(data)
+        .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(data[key]))
+        .join('&');
+      headers = {
+        ...headers,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      };
+    }
+
+    const response: AxiosResponse<T> = await axiosInstance.post(url, payload, { ...config, headers });
     return response.data;
   }
 
