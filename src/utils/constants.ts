@@ -1,48 +1,11 @@
 import {
-  DashboardOutlined,
-  BarChartOutlined,
-  LineChartOutlined,
-  EditOutlined,
-  FileTextOutlined,
-  SettingOutlined,
-} from '@ant-design/icons';
-import type { MenuProps } from 'antd';
-
-// Navigation menu items
-export type MenuItem = Required<MenuProps>['items'][number];
-
-export const NAVIGATION_MENU_ITEMS: MenuItem[] = [
-  {
-    key: 'dashboard',
-    icon: DashboardOutlined,
-    label: 'Dashboard',
-  },
-  {
-    key: 'scorecards',
-    icon: BarChartOutlined,
-    label: 'Scorecards',
-  },
-  {
-    key: 'kpis',
-    icon: LineChartOutlined,
-    label: 'KPI Management',
-  },
-  {
-    key: 'measure-data',
-    icon: EditOutlined,
-    label: 'Measure Data',
-  },
-  {
-    key: 'reports',
-    icon: FileTextOutlined,
-    label: 'Reports',
-  },
-  {
-    key: 'settings',
-    icon: SettingOutlined,
-    label: 'Settings',
-  },
-];
+  LayoutDashboard,
+  BarChart3,
+  TrendingUp,
+  Edit,
+  FileText,
+  Settings,
+} from 'lucide-react';
 
 // Route paths
 export const ROUTES = {
@@ -126,3 +89,43 @@ export const COLOR_PRESETS = [
   '#597EF7', // Geek Blue
   '#9254DE', // Purple
 ] as const;
+
+// Navigation menu items
+export interface MenuItem {
+  key: string;
+  icon: any;
+  label: string;
+}
+
+export const NAVIGATION_MENU_ITEMS: MenuItem[] = [
+  {
+    key: 'dashboard',
+    icon: LayoutDashboard,
+    label: 'Dashboard',
+  },
+  {
+    key: 'scorecards',
+    icon: BarChart3,
+    label: 'Scorecards',
+  },
+  {
+    key: 'kpis',
+    icon: TrendingUp,
+    label: 'KPI Management',
+  },
+  {
+    key: 'measure-data',
+    icon: Edit,
+    label: 'Measure Data',
+  },
+  {
+    key: 'reports',
+    icon: FileText,
+    label: 'Reports',
+  },
+  {
+    key: 'settings',
+    icon: Settings,
+    label: 'Settings',
+  },
+];
