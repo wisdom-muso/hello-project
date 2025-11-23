@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   Table,
   Button,
@@ -28,38 +28,21 @@ import type { TableProps } from 'antd';
 import { Measure } from '@/types';
 import { hillfogClient } from '@/api/hillfogClient';
 import { handleApiError, formatDate } from '@/utils/helpers';
+import { useSWRFetch } from '@/hooks/useSWRFetch';
 
 const { Search } = Input;
 const { TextArea } = Input;
 const { Option } = Select;
 
 export default function KpiManagement() {
-  const [kpis, setKpis] = useState<Measure[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { data: kpis = [], isLoading, mutate } = useSWRFetch<Measure[]>('/measures');
   const [searchText, setSearchText] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [editingKpi, setEditingKpi] = useState<Measure | null>(null);
   const [form] = Form.useForm();
 
-  // Fetch KPIs
-  const fetchKpis = async () => {
-    setLoading(true);
-    try {
-      const data = await hillfogClient.get<Measure[]>('/measures');
-      setKpis(data);
-    } catch (error) {
-      handleApiError(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchKpis();
-  }, []);
-
   // Open modal for create/edit
-  const openModal = (kpi?: Measure) => {
+  const openModal = useCallback((kpi?: Measure) => {
     if (kpi) {
       setEditingKpi(kpi);
       form.setFieldsValue(kpi);
@@ -68,17 +51,17 @@ export default function KpiManagement() {
       form.resetFields();
     }
     setModalVisible(true);
-  };
+  }, [form]);
 
   // Close modal
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setModalVisible(false);
     setEditingKpi(null);
     form.resetFields();
-  };
+  }, [form]);
 
   // Handle form submission
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = useCallback(async (values: any) => {
     try {
       if (editingKpi) {
         await hillfogClient.put(`/measures/${editingKpi.id}`, values);
@@ -88,44 +71,55 @@ export default function KpiManagement() {
         message.success('KPI created successfully');
       }
       closeModal();
-      fetchKpis();
+      mutate();
     } catch (error) {
       handleApiError(error);
     }
-  };
+  }, [editingKpi, closeModal, mutate]);
 
   // Delete KPI
-  const handleDelete = async (id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
     try {
       await hillfogClient.delete(`/measures/${id}`);
       message.success('KPI deleted successfully');
-      fetchKpis();
+      mutate();
     } catch (error) {
       handleApiError(error);
     }
-  };
+  }, [mutate]);
 
-  // Filter KPIs based on search
-  const filteredKpis = kpis.filter(
-    (kpi) =>
-      kpi.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      kpi.description?.toLowerCase().includes(searchText.toLowerCase())
-  );
+  // Filter KPIs based on search (memoized)
+  const filteredKpis = useMemo(() => {
+    return kpis.filter(
+      (kpi) =>
+        kpi.name.toLowerCase().includes(searchText.toLowerCase()) ||
+        kpi.description?.toLowerCase().includes(searchText.toLowerCase())
+    );
+  }, [kpis, searchText]);
 
-  // Calculate statistics
-  const activeKpis = kpis.filter((k) => k.currentValue !== undefined && k.currentValue !== null).length;
-  const achievedKpis = kpis.filter(
-    (k) => k.currentValue && k.targetValue && k.currentValue >= k.targetValue
-  ).length;
-  const atRiskKpis = kpis.filter(
-    (k) =>
-      k.currentValue &&
-      k.targetValue &&
-      k.currentValue < k.targetValue * 0.7
-  ).length;
+  // Calculate statistics (memoized)
+  const statistics = useMemo(() => {
+    const activeKpis = kpis.filter((k) => k.currentValue !== undefined && k.currentValue !== null).length;
+    const achievedKpis = kpis.filter(
+      (k) => k.currentValue && k.targetValue && k.currentValue >= k.targetValue
+    ).length;
+    const atRiskKpis = kpis.filter(
+      (k) =>
+        k.currentValue &&
+        k.targetValue &&
+        k.currentValue < k.targetValue * 0.7
+    ).length;
 
-  // Table columns
-  const columns: TableProps<Measure>['columns'] = [
+    return { activeKpis, achievedKpis, atRiskKpis };
+  }, [kpis]);
+
+  // Memoize handlers
+  const handleSearch = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchText(e.target.value);
+  }, []);
+
+  // Table columns (memoized)
+  const columns: TableProps<Measure>['columns'] = useMemo(() => [
     {
       title: 'KPI Name',
       dataIndex: 'name',
@@ -212,7 +206,7 @@ export default function KpiManagement() {
         </Space>
       ),
     },
-  ];
+  ], [openModal, handleDelete]);
 
   return (
     <div>
@@ -223,6 +217,7 @@ export default function KpiManagement() {
               title="Total KPIs"
               value={kpis.length}
               prefix={<LineChartOutlined />}
+              loading={isLoading}
             />
           </Card>
         </Col>
@@ -230,8 +225,9 @@ export default function KpiManagement() {
           <Card>
             <Statistic
               title="Active KPIs"
-              value={activeKpis}
+              value={statistics.activeKpis}
               valueStyle={{ color: '#1890ff' }}
+              loading={isLoading}
             />
           </Card>
         </Col>
@@ -239,8 +235,9 @@ export default function KpiManagement() {
           <Card>
             <Statistic
               title="Achieved"
-              value={achievedKpis}
+              value={statistics.achievedKpis}
               valueStyle={{ color: '#3f8600' }}
+              loading={isLoading}
             />
           </Card>
         </Col>
@@ -248,8 +245,9 @@ export default function KpiManagement() {
           <Card>
             <Statistic
               title="At Risk"
-              value={atRiskKpis}
+              value={statistics.atRiskKpis}
               valueStyle={{ color: '#cf1322' }}
+              loading={isLoading}
             />
           </Card>
         </Col>
@@ -263,7 +261,7 @@ export default function KpiManagement() {
               placeholder="Search KPIs..."
               allowClear
               prefix={<SearchOutlined />}
-              onChange={(e) => setSearchText(e.target.value)}
+              onChange={handleSearch}
               style={{ width: 300 }}
             />
             <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal()}>
@@ -276,7 +274,7 @@ export default function KpiManagement() {
           columns={columns}
           dataSource={filteredKpis}
           rowKey="id"
-          loading={loading}
+          loading={isLoading}
           pagination={{
             pageSize: 10,
             showSizeChanger: true,

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   Table,
   Button,
@@ -27,51 +27,65 @@ import { Scorecard } from '@/types';
 import { hillfogClient } from '@/api/hillfogClient';
 import { handleApiError, formatDate } from '@/utils/helpers';
 import { useRouter } from 'next/navigation';
+import { useSWRFetch } from '@/hooks/useSWRFetch';
 
 const { Search } = Input;
 
 export default function ScorecardList() {
-  const [scorecards, setScorecards] = useState<Scorecard[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { data: scorecards = [], isLoading, mutate } = useSWRFetch<Scorecard[]>('/scorecards');
   const [searchText, setSearchText] = useState('');
   const router = useRouter();
 
-  // Fetch scorecards
-  const fetchScorecards = async () => {
-    setLoading(true);
-    try {
-      const data = await hillfogClient.get<Scorecard[]>('/scorecards');
-      setScorecards(data);
-    } catch (error) {
-      handleApiError(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchScorecards();
-  }, []);
-
   // Delete scorecard
-  const handleDelete = async (id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
     try {
       await hillfogClient.delete(`/scorecards/${id}`);
       message.success('Scorecard deleted successfully');
-      fetchScorecards();
+      mutate();
     } catch (error) {
       handleApiError(error);
     }
-  };
+  }, [mutate]);
 
-  // Filter scorecards based on search
-  const filteredScorecards = scorecards.filter((scorecard) =>
-    scorecard.name.toLowerCase().includes(searchText.toLowerCase()) ||
-    scorecard.description?.toLowerCase().includes(searchText.toLowerCase())
-  );
+  // Filter scorecards based on search (memoized)
+  const filteredScorecards = useMemo(() => {
+    return scorecards.filter((scorecard) =>
+      scorecard.name.toLowerCase().includes(searchText.toLowerCase()) ||
+      scorecard.description?.toLowerCase().includes(searchText.toLowerCase())
+    );
+  }, [scorecards, searchText]);
 
-  // Table columns
-  const columns: TableProps<Scorecard>['columns'] = [
+  // Memoize statistics calculations
+  const statistics = useMemo(() => ({
+    totalScorecards: scorecards.length,
+    totalPerspectives: scorecards.reduce((acc, s) => acc + (s.perspectives?.length || 0), 0),
+    totalObjectives: scorecards.reduce(
+      (acc, s) =>
+        acc +
+        (s.perspectives?.reduce((pacc, p) => pacc + (p.objectives?.length || 0), 0) || 0),
+      0
+    ),
+  }), [scorecards]);
+
+  // Memoize handlers
+  const handleSearch = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchText(e.target.value);
+  }, []);
+
+  const handleView = useCallback((id: string) => {
+    router.push(`/scorecards/${id}`);
+  }, [router]);
+
+  const handleEdit = useCallback((id: string) => {
+    router.push(`/scorecards/${id}/edit`);
+  }, [router]);
+
+  const handleNew = useCallback(() => {
+    router.push('/scorecards/new');
+  }, [router]);
+
+  // Table columns (memoized)
+  const columns: TableProps<Scorecard>['columns'] = useMemo(() => [
     {
       title: 'Name',
       dataIndex: 'name',
@@ -114,14 +128,14 @@ export default function ScorecardList() {
           <Button
             type="text"
             icon={<EyeOutlined />}
-            onClick={() => router.push(`/scorecards/${record.id}`)}
+            onClick={() => handleView(record.id)}
           >
             View
           </Button>
           <Button
             type="text"
             icon={<EditOutlined />}
-            onClick={() => router.push(`/scorecards/${record.id}/edit`)}
+            onClick={() => handleEdit(record.id)}
           >
             Edit
           </Button>
@@ -139,7 +153,7 @@ export default function ScorecardList() {
         </Space>
       ),
     },
-  ];
+  ], [handleView, handleEdit, handleDelete]);
 
   return (
     <div>
@@ -148,8 +162,9 @@ export default function ScorecardList() {
           <Card>
             <Statistic
               title="Total Scorecards"
-              value={scorecards.length}
+              value={statistics.totalScorecards}
               prefix={<ProjectOutlined />}
+              loading={isLoading}
             />
           </Card>
         </Col>
@@ -157,7 +172,8 @@ export default function ScorecardList() {
           <Card>
             <Statistic
               title="Total Perspectives"
-              value={scorecards.reduce((acc, s) => acc + (s.perspectives?.length || 0), 0)}
+              value={statistics.totalPerspectives}
+              loading={isLoading}
             />
           </Card>
         </Col>
@@ -165,12 +181,8 @@ export default function ScorecardList() {
           <Card>
             <Statistic
               title="Total Objectives"
-              value={scorecards.reduce(
-                (acc, s) =>
-                  acc +
-                  (s.perspectives?.reduce((pacc, p) => pacc + (p.objectives?.length || 0), 0) || 0),
-                0
-              )}
+              value={statistics.totalObjectives}
+              loading={isLoading}
             />
           </Card>
         </Col>
@@ -184,13 +196,13 @@ export default function ScorecardList() {
               placeholder="Search scorecards..."
               allowClear
               prefix={<SearchOutlined />}
-              onChange={(e) => setSearchText(e.target.value)}
+              onChange={handleSearch}
               style={{ width: 300 }}
             />
             <Button
               type="primary"
               icon={<PlusOutlined />}
-              onClick={() => router.push('/scorecards/new')}
+              onClick={handleNew}
             >
               New Scorecard
             </Button>
@@ -201,7 +213,7 @@ export default function ScorecardList() {
           columns={columns}
           dataSource={filteredScorecards}
           rowKey="id"
-          loading={loading}
+          loading={isLoading}
           pagination={{
             pageSize: 10,
             showSizeChanger: true,

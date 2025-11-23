@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import {
   Card,
   Select,
@@ -16,31 +16,18 @@ import { Measure } from '@/types';
 import { hillfogClient } from '@/api/hillfogClient';
 import { handleApiError } from '@/utils/helpers';
 import dayjs, { Dayjs } from 'dayjs';
+import { useSWRFetch } from '@/hooks/useSWRFetch';
 
 const { Option } = Select;
 
 export default function MeasureDataPage() {
-  const [measures, setMeasures] = useState<Measure[]>([]);
+  const { data: measures = [], isLoading: measuresLoading } = useSWRFetch<Measure[]>('/measures');
   const [selectedMeasure, setSelectedMeasure] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
   const [htmlContent, setHtmlContent] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  // Fetch measures once on mount
-  useEffect(() => {
-    const fetchMeasures = async () => {
-      try {
-        const data = await hillfogClient.get<Measure[]>('/measures');
-        setMeasures(data);
-      } catch (error) {
-        handleApiError(error);
-      }
-    };
-
-    fetchMeasures();
-  }, []); // Only run once on mount
 
   // Memoize fetchMeasureData function
   const fetchMeasureData = useCallback(async () => {
@@ -113,7 +100,7 @@ export default function MeasureDataPage() {
         form.removeEventListener('submit', handleFormSubmit);
       });
     };
-  }, [htmlContent, handleFormSubmit]); // Only re-run when htmlContent or handler changes
+  }, [htmlContent, handleFormSubmit]);
 
   // Memoize handlers
   const handleMeasureChange = useCallback((value: string) => {
@@ -161,6 +148,7 @@ export default function MeasureDataPage() {
                 value={selectedMeasure}
                 showSearch
                 optionFilterProp="children"
+                loading={measuresLoading}
               >
                 {measures.map((measure) => (
                   <Option key={measure.id} value={measure.id}>
