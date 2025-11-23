@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   Card,
   Row,
@@ -88,7 +88,7 @@ const availableReports: Report[] = [
   },
 ];
 
-export default function ReportsList() {
+const ReportsList = React.memo(function ReportsList() {
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
     dayjs().subtract(1, 'month'),
@@ -96,25 +96,43 @@ export default function ReportsList() {
   ]);
   const [reportFormat, setReportFormat] = useState<string>('pdf');
 
-  const handleGenerateReport = () => {
+  // Memoize selected report details
+  const selectedReportDetails = useMemo(() => {
+    return availableReports.find((r) => r.id === selectedReport);
+  }, [selectedReport]);
+
+  // Memoize handlers to prevent unnecessary re-renders
+  const handleGenerateReport = useCallback(() => {
     if (!selectedReport) {
       return;
     }
-    // In real implementation, this would call the API to generate the report
     console.log('Generating report:', {
       reportId: selectedReport,
       dateRange: [dateRange[0].format('YYYY-MM-DD'), dateRange[1].format('YYYY-MM-DD')],
       format: reportFormat,
     });
-  };
+  }, [selectedReport, dateRange, reportFormat]);
 
-  const handlePreviewReport = () => {
+  const handlePreviewReport = useCallback(() => {
     if (!selectedReport) {
       return;
     }
-    // In real implementation, this would open a preview modal
     console.log('Previewing report:', selectedReport);
-  };
+  }, [selectedReport]);
+
+  const handleReportSelect = useCallback((reportId: string) => {
+    setSelectedReport(reportId);
+  }, []);
+
+  const handleDateRangeChange = useCallback((dates: [Dayjs, Dayjs] | null) => {
+    if (dates) {
+      setDateRange(dates);
+    }
+  }, []);
+
+  const handleFormatChange = useCallback((value: string) => {
+    setReportFormat(value);
+  }, []);
 
   return (
     <div>
@@ -132,8 +150,9 @@ export default function ReportsList() {
                 <List.Item
                   actions={[
                     <Button
+                      key="select"
                       type="link"
-                      onClick={() => setSelectedReport(report.id)}
+                      onClick={() => handleReportSelect(report.id)}
                     >
                       Select
                     </Button>,
@@ -144,8 +163,9 @@ export default function ReportsList() {
                     padding: 16,
                     borderRadius: 8,
                     cursor: 'pointer',
+                    transition: 'background-color 0.2s ease',
                   }}
-                  onClick={() => setSelectedReport(report.id)}
+                  onClick={() => handleReportSelect(report.id)}
                 >
                   <List.Item.Meta
                     avatar={report.icon}
@@ -172,7 +192,7 @@ export default function ReportsList() {
                 </label>
                 <RangePicker
                   value={dateRange}
-                  onChange={(dates) => dates && setDateRange(dates as [Dayjs, Dayjs])}
+                  onChange={handleDateRangeChange}
                   style={{ width: '100%' }}
                 />
               </div>
@@ -183,7 +203,7 @@ export default function ReportsList() {
                 </label>
                 <Select
                   value={reportFormat}
-                  onChange={setReportFormat}
+                  onChange={handleFormatChange}
                   style={{ width: '100%' }}
                 >
                   <Option value="pdf">PDF</Option>
@@ -215,11 +235,10 @@ export default function ReportsList() {
                 </Button>
               </Space>
 
-              {selectedReport && (
+              {selectedReportDetails && (
                 <Card size="small" style={{ marginTop: 16 }}>
                   <Paragraph type="secondary" style={{ margin: 0, fontSize: 12 }}>
-                    <strong>Selected:</strong>{' '}
-                    {availableReports.find((r) => r.id === selectedReport)?.name}
+                    <strong>Selected:</strong> {selectedReportDetails.name}
                   </Paragraph>
                 </Card>
               )}
@@ -229,4 +248,6 @@ export default function ReportsList() {
       </Row>
     </div>
   );
-}
+});
+
+export default ReportsList;

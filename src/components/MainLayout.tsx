@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Layout, Menu, Avatar, Dropdown, Button, theme, Breadcrumb } from 'antd';
 import {
   DashboardOutlined,
@@ -27,7 +27,7 @@ interface MainLayoutProps {
   children: React.ReactNode;
 }
 
-export default function MainLayout({ children }: MainLayoutProps) {
+function MainLayout({ children }: MainLayoutProps) {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const pathname = usePathname();
@@ -39,8 +39,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
 
-  // Update breadcrumbs based on pathname
-  useEffect(() => {
+  // Memoize breadcrumb computation to prevent unnecessary updates
+  const computedBreadcrumbs = useMemo(() => {
     const pathSegments = pathname.split('/').filter(Boolean);
     const crumbs = pathSegments.map((segment, index) => {
       const path = '/' + pathSegments.slice(0, index + 1).join('/');
@@ -48,11 +48,16 @@ export default function MainLayout({ children }: MainLayoutProps) {
       return { title, path };
     });
     
-    dispatch(setBreadcrumbs([{ title: 'Home', path: ROUTES.DASHBOARD }, ...crumbs]));
-  }, [pathname, dispatch]);
+    return [{ title: 'Home', path: ROUTES.DASHBOARD }, ...crumbs];
+  }, [pathname]);
 
-  // Sidebar menu items
-  const menuItems: MenuProps['items'] = [
+  // Update breadcrumbs only when they actually change
+  useEffect(() => {
+    dispatch(setBreadcrumbs(computedBreadcrumbs));
+  }, [computedBreadcrumbs, dispatch]);
+
+  // Memoize menu items to prevent recreation on every render
+  const menuItems: MenuProps['items'] = useMemo(() => [
     {
       key: ROUTES.DASHBOARD,
       icon: <DashboardOutlined />,
@@ -89,10 +94,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
       label: 'Settings',
       onClick: () => router.push(ROUTES.SETTINGS),
     },
-  ];
+  ], [router]);
 
-  // User dropdown menu
-  const userMenuItems: MenuProps['items'] = [
+  // Memoize user menu items
+  const userMenuItems: MenuProps['items'] = useMemo(() => [
     {
       key: 'profile',
       icon: <UserOutlined />,
@@ -117,17 +122,27 @@ export default function MainLayout({ children }: MainLayoutProps) {
         router.push(ROUTES.LOGIN);
       },
     },
-  ];
+  ], [router, dispatch]);
 
-  // Get selected menu key based on current path
-  const getSelectedKey = (): string[] => {
+  // Memoize selected menu key calculation
+  const selectedKeys = useMemo((): string[] => {
     if (pathname.startsWith(ROUTES.SCORECARDS)) return [ROUTES.SCORECARDS];
     if (pathname.startsWith(ROUTES.KPIS)) return [ROUTES.KPIS];
     if (pathname.startsWith(ROUTES.MEASURE_DATA)) return [ROUTES.MEASURE_DATA];
     if (pathname.startsWith(ROUTES.REPORTS)) return [ROUTES.REPORTS];
     if (pathname.startsWith(ROUTES.SETTINGS)) return [ROUTES.SETTINGS];
     return [ROUTES.DASHBOARD];
-  };
+  }, [pathname]);
+
+  // Memoize toggle sidebar handler
+  const handleToggleSidebar = useCallback(() => {
+    dispatch(toggleSidebar());
+  }, [dispatch]);
+
+  // Memoize breadcrumb click handler
+  const handleBreadcrumbClick = useCallback((path: string) => {
+    router.push(path);
+  }, [router]);
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -161,7 +176,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
         <Menu
           theme="dark"
           mode="inline"
-          selectedKeys={getSelectedKey()}
+          selectedKeys={selectedKeys}
           items={menuItems}
         />
       </Sider>
@@ -182,7 +197,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           <Button
             type="text"
             icon={sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => dispatch(toggleSidebar())}
+            onClick={handleToggleSidebar}
             style={{
               fontSize: '16px',
               width: 64,
@@ -205,7 +220,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             style={{ margin: '16px 0' }}
             items={breadcrumbs.map((crumb) => ({
               title: crumb.path ? (
-                <a onClick={() => router.push(crumb.path!)}>{crumb.title}</a>
+                <a onClick={() => handleBreadcrumbClick(crumb.path!)}>{crumb.title}</a>
               ) : (
                 crumb.title
               ),
@@ -229,3 +244,5 @@ export default function MainLayout({ children }: MainLayoutProps) {
     </Layout>
   );
 }
+
+export default MainLayout;
