@@ -66,3 +66,23 @@ export interface PaginatedResponse<T> {
   page: number;
   pageSize: number;
 }
+// Administration Types
+export interface Employee {
+  oid: string; // Primary key from hillfog
+  employeeId: string; // Unique employee identifier
+  fullName: string;
+  email: string;
+  organizationOid: string; // Foreign key to Organization
+  role: 'ADMIN' | 'MANAGER' | 'USER';
+  isLocked: boolean;
+  // Add other fields as per EmployeeController.java model
+}
+
+export interface Organization {
+  oid: string;
+  orgId: string; // Unique organization identifier
+  name: string;
+  parentOid: string | null; // For hierarchical structure
+  description: string;
+  // Add other fields as per OrganizationController.java model
+}
