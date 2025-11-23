@@ -3,7 +3,6 @@ import "./globals.css";
 import VisualEditsMessenger from "../visual-edits/VisualEditsMessenger";
 import ErrorReporter from "@/components/ErrorReporter";
 import Script from "next/script";
-import AntdProvider from "@/components/AntdProvider";
 import ReduxProvider from "@/components/ReduxProvider";
 
 export const metadata: Metadata = {
@@ -31,9 +30,7 @@ export default function RootLayout({
           data-custom-data='{"appName": "YourApp", "version": "1.0.0", "greeting": "hi"}'
         />
         <ReduxProvider>
-          <AntdProvider>
-            {children}
-          </AntdProvider>
+          {children}
         </ReduxProvider>
         <VisualEditsMessenger />
       </body>
