@@ -430,7 +430,7 @@
 				<configuration>
 					<includeSystemScope>true</includeSystemScope>
 					<!-- export full jar file, remark this option -->
-					<skip>true</skip>
+					<mainClass>org.qifu.Application</mainClass>
 				</configuration>
                 <executions>
                     <execution>

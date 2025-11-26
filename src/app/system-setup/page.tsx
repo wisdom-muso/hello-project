@@ -6,6 +6,8 @@ import MainLayout from '@/components/MainLayout';
 import FormulaList from '@/features/formulas/FormulaList';
 import AggregationList from '@/features/aggregations/AggregationList';
 
+export const dynamic = 'force-dynamic';
+
 const SystemSetupPage: React.FC = () => {
   const items = [
     {

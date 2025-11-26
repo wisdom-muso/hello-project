@@ -5,6 +5,7 @@ import ErrorReporter from "@/components/ErrorReporter";
 import Script from "next/script";
 import AntdProvider from "@/components/AntdProvider";
 import ReduxProvider from "@/components/ReduxProvider";
+import QueryProvider from "@/components/QueryProvider";
 
 export const metadata: Metadata = {
   title: "Hillfog - Strategic Performance Management",
@@ -31,9 +32,11 @@ export default function RootLayout({
           data-custom-data='{"appName": "YourApp", "version": "1.0.0", "greeting": "hi"}'
         />
         <ReduxProvider>
-          <AntdProvider>
-            {children}
-          </AntdProvider>
+          <QueryProvider>
+            <AntdProvider>
+              {children}
+            </AntdProvider>
+          </QueryProvider>
         </ReduxProvider>
         <VisualEditsMessenger />
       </body>

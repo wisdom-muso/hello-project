@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import React from 'react';
 import { Card, Row, Col, Statistic, Typography } from 'antd';
 import {

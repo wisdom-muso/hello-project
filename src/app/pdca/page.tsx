@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import MainLayout from '@/components/MainLayout';
 import PdcaList from '@/features/pdca/PdcaList';
 

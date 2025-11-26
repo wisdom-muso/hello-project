@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # Hillfog Java Backend
+  hillfog-backend:
+    build:
+      context: ./hillfog
+      dockerfile: Dockerfile
+    container_name: hillfog-backend
+    ports:
+      - "8088:8088"
+    environment:
+      - JAVA_OPTS=-Xmx512m -Xms256m
+      - SPRING_PROFILES_ACTIVE=docker
+    volumes:
+      - ./hillfog/core-app/resources:/app/resources
+      - hillfog-logs:/app/logs
+    networks:
+      - hillfog-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8088/login.action"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+
+  # Next.js Frontend
+  hillfog-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hillfog-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_HILLFOG_BACKEND_URL=http://hillfog-backend:8088
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
+    depends_on:
+      hillfog-backend:
+        condition: service_healthy
+    networks:
+      - hillfog-network
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy (Optional - for production-like setup)
+  nginx:
+    image: nginx:alpine
+    container_name: hillfog-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - hillfog-frontend
+      - hillfog-backend
+    networks:
+      - hillfog-network
+    restart: unless-stopped
+
+volumes:
+  hillfog-logs:
+    driver: local
+
+networks:
+  hillfog-network:
+    driver: bridge
