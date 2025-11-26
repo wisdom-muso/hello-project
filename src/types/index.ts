@@ -1,31 +1,34 @@
-// Scorecard Types
-export interface Objective {
+// Re-export Hillfog types as primary types
+export * from './hillfog';
+
+// Legacy types for backward compatibility
+export interface LegacyObjective {
   id: string; // Standardized UUID field
   name: string;
   description?: string;
   targetValue?: number;
   currentValue?: number;
-  measures?: Measure[];
+  measures?: LegacyMeasure[];
 }
 
-export interface Perspective {
+export interface LegacyPerspective {
   id: string; // Standardized UUID field
   name: string;
   description?: string;
-  objectives: Objective[];
+  objectives: LegacyObjective[];
 }
 
-export interface Scorecard {
+export interface LegacyScorecard {
   id: string; // Standardized UUID field
   name: string;
   description?: string;
   createdAt: string;
   updatedAt: string;
-  perspectives: Perspective[];
+  perspectives: LegacyPerspective[];
 }
 
-// Measure Types
-export interface Measure {
+// Legacy Measure Types
+export interface LegacyMeasure {
   id: string; // Standardized UUID field
   name: string;
   description?: string;
@@ -36,7 +39,7 @@ export interface Measure {
   objectiveId?: string; // Reference field also standardized
 }
 
-export interface MeasureData {
+export interface LegacyMeasureData {
   id: string; // Standardized UUID field
   measureId: string; // Reference field also standardized
   value: number;
@@ -66,8 +69,16 @@ export interface PaginatedResponse<T> {
   page: number;
   pageSize: number;
 }
-// Administration Types
-export interface Employee {
+
+// Type aliases for compatibility
+export type Scorecard = HfScorecard;
+export type Objective = HfObjective;
+export type Measure = HfKpi;
+export type MeasureData = HfMeasureData;
+export type Employee = HfEmployee;
+
+// Legacy Administration Types (for backward compatibility)
+export interface LegacyEmployee {
   oid: string; // Primary key from hillfog
   employeeId: string; // Unique employee identifier
   fullName: string;
@@ -75,7 +86,6 @@ export interface Employee {
   organizationOid: string; // Foreign key to Organization
   role: 'ADMIN' | 'MANAGER' | 'USER';
   isLocked: boolean;
-  // Add other fields as per EmployeeController.java model
 }
 
 export interface Organization {
@@ -84,10 +94,9 @@ export interface Organization {
   name: string;
   parentOid: string | null; // For hierarchical structure
   description: string;
-  // Add other fields as per OrganizationController.java model
 }
 
-// OKR Types
+// Legacy OKR Types (for backward compatibility)
 export interface KeyResult {
   oid: string;
   name: string;
@@ -95,22 +104,20 @@ export interface KeyResult {
   currentValue: number;
   unit: string;
   weight: number;
-  // Add other fields as per OkrBaseController.java model
 }
 
-export interface Objective {
+export interface LegacyOkrObjective {
   oid: string;
   name: string;
   description: string;
   keyResults: KeyResult[];
-  // Add other fields as per OkrBaseController.java model
 }
 
 export interface OkrBase {
   oid: string;
   title: string;
   period: string; // e.g., "Q1 2025"
-  objectives: Objective[];
+  objectives: LegacyOkrObjective[];
 }
 
 // PDCA Types
@@ -120,7 +127,6 @@ export interface PdcaCycle {
   startDate: string;
   endDate: string;
   status: 'PLAN' | 'DO' | 'CHECK' | 'ACT';
-  // Add other fields as per PdcaController.java model
 }
 
 // System Setup Types
@@ -135,7 +141,6 @@ export interface AggregationMethod {
   oid: string;
   name: string;
   methodType: 'SUM' | 'AVERAGE' | 'CUSTOM';
-  // Add other fields as per AggregationMethodController.java model
 }
 
 // Reporting Types
